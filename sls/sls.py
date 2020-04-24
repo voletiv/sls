@@ -57,15 +57,14 @@ class Sls(torch.optim.Optimizer):
     def step(self, closure):
         # deterministic closure
         seed = time.time()
-        def closure_deterministic():
+        def closure_deterministic(backwards=False):
             with ut.random_seed_torch(int(seed)):
-                return closure()
+                return closure(backwards=backwards)
 
         batch_step_size = self.state['step_size']
 
         # get loss and compute gradients
-        loss = closure_deterministic()
-        loss.backward()
+        loss = closure_deterministic(backwards=True)
 
         # increment # forward-backward calls
         self.state['n_forwards'] += 1
@@ -99,7 +98,7 @@ class Sls(torch.optim.Optimizer):
                         ut.try_sgd_update(params, step_size, params_current, grad_current)
 
                         # compute the loss at the next step; no need to compute gradients.
-                        loss_next = closure_deterministic()
+                        loss_next = closure_deterministic(backwards=False)
                         self.state['n_forwards'] += 1
 
                         # =================================================
@@ -115,7 +114,7 @@ class Sls(torch.optim.Optimizer):
                             found, step_size, step_size_old = armijo_results
                             if found == 1:
                                 break
-                        
+
                         elif group['line_search_fn'] == "goldstein":
                             goldstein_results = ut.check_goldstein_conditions(step_size=step_size,
                                                                     loss=loss,
@@ -126,13 +125,10 @@ class Sls(torch.optim.Optimizer):
                                                                     beta_f=group['beta_f'],
                                                                     bound_step_size=group['bound_step_size'],
                                                                     eta_max=group['eta_max'])
-
-                            found = goldstein_results["found"]
-                            step_size = goldstein_results["step_size"]
-
+                            found, step_size = goldstein_results["found"], goldstein_results["step_size"]
                             if found == 3:
                                 break
-                
+
                     # if line search exceeds max_epochs
                     if found == 0:
                         ut.try_sgd_update(params, 1e-6, params_current, grad_current)

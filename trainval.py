@@ -124,7 +124,7 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, metrics_flag=True):
             opt.zero_grad()
 
             if exp_dict["opt"]["name"] in exp_configs.ours_opt_list + ["l4"]:
-                closure = lambda : loss_function(model, images, labels, backwards=False)
+                closure = lambda backwards: loss_function(model, images, labels, backwards=backwards)
                 opt.step(closure)
 
             else:
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     if args.exp_id is not None:
         # select one experiment
         savedir = os.path.join(args.savedir_base, args.exp_id)
-        exp_dict = hu.load_json(os.path.join(savedir, 'exp_dict.json'))        
+        exp_dict = hu.load_json(os.path.join(savedir, 'exp_dict.json'))
         
         exp_list = [exp_dict]
         

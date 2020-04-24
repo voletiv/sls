@@ -25,30 +25,30 @@ def check_armijo_conditions(step_size, step_size_old, loss, grad_norm,
 def check_goldstein_conditions(step_size, loss, grad_norm,
                           loss_next,
                           c, beta_b, beta_f, bound_step_size, eta_max):
-	found = 0
-	if(loss_next <= (loss - (step_size) * c * grad_norm ** 2)):
-		found = 1
+    found = 0
+    if(loss_next <= (loss - (step_size) * c * grad_norm ** 2)):
+        found = 1
 
-	if(loss_next >= (loss - (step_size) * (1 - c) * grad_norm ** 2)):
-		if found == 1:
-			found = 3 # both conditions are satisfied
-		else:
-			found = 2 # only the curvature condition is satisfied
+    if(loss_next >= (loss - (step_size) * (1 - c) * grad_norm ** 2)):
+        if found == 1:
+            found = 3 # both conditions are satisfied
+        else:
+            found = 2 # only the curvature condition is satisfied
 
-	if (found == 0):
-		raise ValueError('Error')
+    if (found == 0):
+        raise ValueError('Error')
 
-	elif (found == 1):
-		# step-size might be too small
-		step_size = step_size * beta_f
-		if bound_step_size:
-			step_size = min(step_size, eta_max)
+    elif (found == 1):
+        # step-size might be too small
+        step_size = step_size * beta_f
+        if bound_step_size:
+            step_size = min(step_size, eta_max)
 
-	elif (found == 2):
-		# step-size might be too large
-		step_size = max(step_size * beta_b, 1e-8)
+    elif (found == 2):
+        # step-size might be too large
+        step_size = max(step_size * beta_b, 1e-8)
 
-	return {"found":found, "step_size":step_size}
+    return {"found":found, "step_size":step_size}
 
 
 def reset_step(step_size, n_batches_per_epoch=None, gamma=None, reset_option=1,
